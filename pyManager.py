@@ -6,6 +6,7 @@
 import requests
 import argparse
 import getpass
+from threading import Thread
 from BeautifulSoup import BeautifulSoup
 
 __author__ = 'Andrew James Collett'
@@ -57,13 +58,41 @@ class manager_object:
         """Fetch all the paths to the objects."""
         return self.get_encodedURL(collection_path + '/index.json').json()
 
+    def get_object(self, o_dict, index):
+        o_dict[index] = self.get_encodedURL('/api/' + self.business +
+                                            '/' + index + '.json'
+                                            ).json()
+
     def get_objects_from_index(self, object_index):
-        """Fetch each object from manager."""
+        """
+        Fetch each object from manager.
+
+        This function is a little hacky at the moment, it needs threads to
+        perform at any decent speed.
+        """
         objects = dict()
+        threads = dict()
+        cnt = 0
+
         for object in object_index:
-            objects[object] = self.get_encodedURL('/api/' + self.business +
-                                                  '/' + object + '.json'
-                                                  ).json()
+            threads[object] = Thread(target=self.get_object, args=(objects,
+                                                                   object))
+            cnt = cnt + 1
+            threads[object].start()
+            # objects[object] = self.get_encodedURL('/api/' + self.business +
+                                                #   '/' + object + '.json'
+                                                #   ).json()
+            if cnt == 150:
+                for thread in threads:
+                    threads[thread].join()
+                cnt = 0
+                threads = dict()
+
+        for thread in threads:
+            threads[thread].join()
+        # for object in object_index:
+            # threads[object].join()
+
         return objects
 
     def put_object(self, data, object_path):

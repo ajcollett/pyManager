@@ -6,6 +6,7 @@
 import requests
 import argparse
 import getpass
+import json
 from threading import Thread
 from BeautifulSoup import BeautifulSoup
 
@@ -33,13 +34,11 @@ class manager_object:
 
     def get_encodedURL(self, requestURL):
         """Fetch the URL."""
-        r = self.session.get(self.root_url + requestURL)
-        return r
+        return self.session.get(self.root_url + requestURL)
 
     def post_encodedURL(self, data, collection_path):
         """Post to the URL."""
-        r = self.session.post(self.root_url + collection_path, data=data)
-        return r
+        return self.session.post(self.root_url + collection_path, data=data)
 
     def get_business(self, business):
         """Fetch the path to the specific business."""
@@ -59,14 +58,26 @@ class manager_object:
 
         return index
 
-    def index_objects(self, collection_path):
-        """Fetch all the paths to the objects."""
-        return self.get_encodedURL(collection_path + '/index.json').json()
+# Below, the indexing of objects, within a collection
+    def index_objects(self, collection):
+        """Fetch all the paths to the objects in a collection."""
+        return self.get_encodedURL(self.index[collection] +
+                                   '/index.json').json()
 
+    def index_SaleInvoice(self):
+        """Fetch all the SalesInvoices."""
+        return self.index_objects('SalesInvoice')
+
+    def index_Customer(self):
+        """Fetch all the Customer indexes."""
+        return self.index_objects('Customer')
+
+# Below, fetching objects from a collection
     def get_object_thread(self, o_dict, index):
+        """A thread function to make fetching objects faster."""
         o_dict[index] = self.get_encodedURL('/api/' + self.business +
-                                            '/' + index + '.json'
-                                            ).json()
+                                            '/' + index +
+                                            '.json').json()
 
     def get_objects(self, object_index):
         """
@@ -102,22 +113,29 @@ class manager_object:
 
         return objects
 
+# Below, all the PUT commands for the server, to update objects
     def put_object(self, data, object_path):
         """Put an object at that specific path."""
         print('Not yet implemented')
         pass
 
-    def post_object(self, data, collection_path):
+# Below, all the POST commands for the server, to create objects
+    def post_object(self, data, collection):
         """Post an object at that specific path."""
-        r = self.post_encodedURL(data, collection_path)
+        r = self.post_encodedURL(json.dump(data), self.index(collection))
 
         if '201' not in r.status_code:
             print('Something went wrong', r.status_code)
-            print collection_path
+            print collection
             print data
 
         return r
 
+    def post_SalesInvoice(self, data):
+        """Post to the SalesInvoice collection."""
+        return self.post_object(data, 'SalesInvoice')
+
+# Below, all the DEL commands for the server, to delete objects
     def del_object(self, object):
         """Delete the specified object."""
         print('Not yet implemented')
@@ -140,7 +158,7 @@ def __main__():
     args = parser.parse_args()
 
     gom = manager_object(args.root_url, args.user, args.business)
-    object_index = gom.index_objects(gom.index[args.object])
+    object_index = gom.index_objects(args.object)
     print(object_index)
     print(gom.get_objects(object_index))
 

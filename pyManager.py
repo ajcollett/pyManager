@@ -29,11 +29,16 @@ class manager_object:
         self.session = requests.Session()
         self.session.auth = (user, getpass.getpass())
         self.business = self.get_business(business)
-        self.index = self.get_index_of_collections()
+        self.index = self.index_collections()
 
     def get_encodedURL(self, requestURL):
         """Fetch the URL."""
         r = self.session.get(self.root_url + requestURL)
+        return r
+
+    def post_encodedURL(self, data, collection_path):
+        """Post to the URL."""
+        r = self.session.post(self.root_url + collection_path, data=data)
         return r
 
     def get_business(self, business):
@@ -44,7 +49,7 @@ class manager_object:
                 return pair['Key']
         return None
 
-    def get_index_of_collections(self):
+    def index_collections(self):
         """Fetch the paths to the collection."""
         index = dict()
         r = self.get_encodedURL('/api/' + self.business)
@@ -54,16 +59,16 @@ class manager_object:
 
         return index
 
-    def get_index_of_objects(self, collection_path):
+    def index_objects(self, collection_path):
         """Fetch all the paths to the objects."""
         return self.get_encodedURL(collection_path + '/index.json').json()
 
-    def get_object(self, o_dict, index):
+    def get_object_thread(self, o_dict, index):
         o_dict[index] = self.get_encodedURL('/api/' + self.business +
                                             '/' + index + '.json'
                                             ).json()
 
-    def get_objects_from_index(self, object_index):
+    def get_objects(self, object_index):
         """
         Fetch each object from manager.
 
@@ -75,13 +80,15 @@ class manager_object:
         cnt = 0
 
         for object in object_index:
-            threads[object] = Thread(target=self.get_object, args=(objects,
-                                                                   object))
+            threads[object] = Thread(target=self.get_object_thread,
+                                     args=(objects, object))
             cnt = cnt + 1
             threads[object].start()
-            # objects[object] = self.get_encodedURL('/api/' + self.business +
-                                                #   '/' + object + '.json'
-                                                #   ).json()
+            """
+            objects[object] = self.get_encodedURL('/api/' + self.business +
+                                                   '/' + object + '.json'
+                                                   ).json()
+                                                """
             if cnt == 150:
                 for thread in threads:
                     threads[thread].join()
@@ -100,10 +107,16 @@ class manager_object:
         print('Not yet implemented')
         pass
 
-    def post_object(self, data, object_path):
+    def post_object(self, data, collection_path):
         """Post an object at that specific path."""
-        print('Not yet implemented')
-        pass
+        r = self.post_encodedURL(data, collection_path)
+
+        if '201' not in r.status_code:
+            print('Something went wrong', r.status_code)
+            print collection_path
+            print data
+
+        return r
 
     def del_object(self, object):
         """Delete the specified object."""
@@ -127,9 +140,9 @@ def __main__():
     args = parser.parse_args()
 
     gom = manager_object(args.root_url, args.user, args.business)
-    object_index = gom.get_index_of_objects(gom.index[args.object])
+    object_index = gom.index_objects(gom.index[args.object])
     print(object_index)
-    print(gom.get_objects_from_index(object_index))
+    print(gom.get_objects(object_index))
 
 if __name__ == '__main__':
     __main__()

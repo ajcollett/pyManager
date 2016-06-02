@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 # This code is free to use! However, it comes with no warrenties.
 # Please let me know about any improvements
 # Repo at https://github.com/ajcollett/pyManager
@@ -92,6 +95,7 @@ class manager_object:
         """A thread function to make fetching objects faster."""
         o_dict[index] = self.get('/api/' + self.business + '/' + index +
                                  '.json').json()
+        return
 
     def get_objects(self, object_index):
         """
@@ -177,7 +181,7 @@ class manager_object:
         data['Lines'] = lines
         data['Payer'] = payer
         data['BankClearStatus'] = bank_clear_status
-        return self.post_object(data, 'Receipt')
+        return self.post(data, 'Receipt')
 
     def post_customer(self, name, email):
         """POST to the Customer collection."""
@@ -185,7 +189,7 @@ class manager_object:
         data['Name'] = name
         data['Email'] = email
         data['StartingBalanceType'] = 'Credit'
-        return self.post_object(data, 'Customer')
+        return self.post(data, 'Customer')
 
     def post_sales_invoice(self, issue_date, ref, to, lines):
         """Post to the SalesInvoice collection."""
@@ -195,7 +199,7 @@ class manager_object:
         data['To'] = to
         data['Lines'] = lines
         data['AmountsIncludeTax'] = 'true'
-        return self.post_object(data, 'SalesInvoice')
+        return self.post(data, 'SalesInvoice')
 
 # Below, all the DEL commands for the server, to delete objects
     def del_object(self, object):

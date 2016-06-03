@@ -113,7 +113,7 @@ class manager_object:
                                      args=(objects, object))
             cnt = cnt + 1
             threads[object].start()
-            if cnt == 10:
+            if cnt == 150:
                 for thread in threads:
                     threads[thread].join()
                 cnt = 0
@@ -169,6 +169,8 @@ class manager_object:
             print('Something went wrong', r.status_code)
             print(collection)
             print(data)
+
+        print("\n\nPost returned data: " + str(r.headers) + '\n')
 
         return r
 

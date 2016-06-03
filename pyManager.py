@@ -113,7 +113,7 @@ class manager_object:
                                      args=(objects, object))
             cnt = cnt + 1
             threads[object].start()
-            if cnt == 100:
+            if cnt == 10:
                 for thread in threads:
                     threads[thread].join()
                 cnt = 0

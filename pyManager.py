@@ -113,7 +113,7 @@ class manager_object:
                                      args=(objects, object))
             cnt = cnt + 1
             threads[object].start()
-            if cnt == 150:
+            if cnt == 10:
                 for thread in threads:
                     threads[thread].join()
                 cnt = 0
@@ -147,9 +147,9 @@ class manager_object:
         """Get all the inventory Items."""
         return self.get_objects(self.index_inventory())
 
-    def get_sales_inventory_items(self):
-        """Get all the sales inventory Items."""
-        return self.get_objects(self.index_sales_inventory_items())
+    # def get_sales_inventory_items(self):
+    #     """Get all the sales inventory Items."""
+    #     return self.get_objects(self.index_sales_inventory_items())
 
 
 # Below, all the PUT commands for the server, to update objects
@@ -175,15 +175,28 @@ class manager_object:
         return r
 
     def post_receipt(self, date, debit_account, payer,
-                     bank_clear_status, lines):
+                     bank_clear_status, desc, lines):
         """POST to the Receipt collection."""
         data = dict()
         data['Date'] = date
+        data['Description'] = desc
         data['DebitAccount'] = debit_account
         data['Lines'] = lines
         data['Payer'] = payer
         data['BankClearStatus'] = bank_clear_status
         return self.post(data, 'Receipt')
+
+    def post_payment(self, date, credit_account, payee,
+                     bank_clear_status, desc, lines):
+        """POST to the Payment collection."""
+        data = dict()
+        data['Date'] = date
+        data['Description'] = desc
+        data['CreditAccount'] = credit_account
+        data['Lines'] = lines
+        data['Payee'] = payee
+        data['BankClearStatus'] = bank_clear_status
+        return self.post(data, 'Payment')
 
     def post_customer(self, name, email):
         """POST to the Customer collection."""
